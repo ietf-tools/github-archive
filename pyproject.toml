@@ -3,7 +3,9 @@ name = "github-archive"
 version = "0.1.0"
 description = "Back up IETF working group GitHub repositories"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "archive-repo",
+]
 
 [project.scripts]
 github-archive = "github_archive.cli:main"
@@ -21,3 +23,6 @@ dev = [
 venvPath = "."
 venv = ".venv"
 typeCheckingMode = "standard"
+
+[tool.uv.sources]
+archive-repo = { git = "https://github.com/sargeant/archive-repo", rev = "13487ccaf41e8af24a6df734d3e98e6d9a66a3df" }

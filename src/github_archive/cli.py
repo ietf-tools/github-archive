@@ -8,15 +8,16 @@ import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import CalledProcessError
 
 from . import git
 from .inventory import GitHub, build_inventory
+from .issues import archive_issues
 from .log import event, setup
-from .retention import apply_retention
+from .retention import apply_retention, latest_before
 
 
 @dataclass(frozen=True)
@@ -73,16 +74,21 @@ def backup_repo(config, name, day_dir):
     started = time.monotonic()
     mirror = config.data_dir / "mirrors" / f"{name.lower()}.git"
     copy = day_dir / f"{name.lower()}.git"
+    archive = f"{name.lower()}.archive.json"
     step = "fetch"
     try:
         created = git.update_mirror(name, mirror)
         step = "copy"
         git.copy_mirror(name, mirror, copy)
         refs, size = git.ref_count(copy), git.size_bytes(mirror)
+        step = "archive"
+        reference = latest_before(day_dir.parent, date.fromisoformat(day_dir.name), archive)
+        issues, prs, points = archive_issues(name, day_dir / archive, reference)
     except Exception as e:
-        error = e.stderr.strip() if isinstance(e, CalledProcessError) else repr(e)
+        # archive-repo logs every query, so its error is at the end.
+        error = "\n".join(e.stderr.strip().splitlines()[-5:]) if isinstance(e, CalledProcessError) else repr(e)
         event("repo_failed", logging.ERROR, repo=name, step=step, error=error)
-        return False
+        return None
     event(
         "repo_done",
         repo=name,
@@ -90,8 +96,12 @@ def backup_repo(config, name, day_dir):
         refs=refs,
         mirror_bytes=size,
         mirror_created=created,
+        issues=issues,
+        prs=prs,
+        incremental=reference is not None,
+        graphql_points=points,
     )
-    return True
+    return points
 
 
 def run(config, token, command, dry_run):
@@ -127,12 +137,14 @@ def run(config, token, command, dry_run):
             results = list(pool.map(lambda name: backup_repo(config, name, day_dir), repos))
         apply_retention(daily, today, config.keep_daily, config.keep_monthly)
 
+        failed = results.count(None)
         summary = {
             "repos": len(repos),
-            "ok": results.count(True),
-            "failed": results.count(False),
+            "ok": len(repos) - failed,
+            "failed": failed,
             "duration": round(time.monotonic() - started),
-            "api_points": github.requests,
+            "rest_requests": github.requests,
+            "graphql_points": sum(points for points in results if points is not None),
         }
         (day_dir / "run.json").write_text(json.dumps(summary, indent=2) + "\n")
         event("run_done", logging.ERROR if summary["failed"] else logging.INFO, **summary)

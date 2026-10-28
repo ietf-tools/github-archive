@@ -1,7 +1,7 @@
 import json
 from datetime import date, timedelta
 
-from github_archive.retention import apply_retention, days_to_keep
+from github_archive.retention import apply_retention, days_to_keep, latest_before
 
 TODAY = date(2026, 10, 20)
 
@@ -39,3 +39,13 @@ def test_monthly_snapshot_skips_days_that_backed_up_nothing(tmp_path):
 
     apply_retention(tmp_path, TODAY, keep_daily=30, keep_monthly=12)
     assert sorted(p.name for p in tmp_path.iterdir()) == ["2026-03-03", "lost+found"]
+
+
+def test_latest_before_finds_the_newest_earlier_copy(tmp_path):
+    for day in ("2026-10-17", "2026-10-18", "2026-10-21"):
+        (tmp_path / day / "owner").mkdir(parents=True)
+        (tmp_path / day / "owner" / "repo.archive.json").write_text("{}")
+    (tmp_path / "2026-10-19").mkdir()
+
+    assert latest_before(tmp_path, TODAY, "owner/repo.archive.json") == tmp_path / "2026-10-18" / "owner" / "repo.archive.json"
+    assert latest_before(tmp_path, TODAY, "owner/other.archive.json") is None

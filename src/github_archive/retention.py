@@ -16,6 +16,13 @@ def day_dirs(daily):
     return dirs
 
 
+def latest_before(daily, today, path):
+    for day, day_dir in sorted(day_dirs(daily).items(), reverse=True):
+        if day <= today and (day_dir / path).exists():
+            return day_dir / path
+    return None
+
+
 def backed_up_anything(day_dir):
     run = day_dir / "run.json"
     return run.exists() and json.loads(run.read_text())["ok"] > 0

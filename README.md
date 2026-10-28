@@ -7,7 +7,8 @@ Each run:
 1. Builds the inventory from the Datatracker's `github_org` and `github_repo` resources for groups and documents. A link to an owner pulls in all of that owner's public repos, forks included. The run aborts if the inventory is empty.
 2. Updates a persistent `git clone --mirror` of each repo, including `refs/pull/*`.
 3. Clones each mirror into the day's directory. A local clone hardlinks the object files, so a day's copy costs little more than its refs, and later fetches or a force-push on GitHub can't change it.
-4. Deletes day directories that fall outside the retention rules.
+4. Saves the repo's issues and pull requests, with their comments and reviews, as JSON using [archive-repo](https://github.com/MikeBishop/archive-repo). The newest earlier copy is passed as a reference, so only what changed since is fetched.
+5. Deletes day directories that fall outside the retention rules.
 
 Logs are JSON lines on stdout. The process exits non-zero if the run aborted or any repo failed.
 
@@ -21,6 +22,7 @@ DATA_DIR/
     inventory.json
     run.json
     <owner>/<repo>.git
+    <owner>/<repo>.archive.json
 ```
 
 Owner and repo names are lower case. Dates are UTC.
@@ -31,7 +33,7 @@ All configuration comes from environment variables.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `GITHUB_TOKEN` | required | Read-only token for the GitHub API. Git clones are anonymous |
+| `GITHUB_TOKEN` | required | Token for the GitHub REST and GraphQL APIs; read access to public repos is enough. Git clones are anonymous |
 | `DATATRACKER_URL` | `https://datatracker.ietf.org` | Inventory source |
 | `DATA_DIR` | `/data` | Where mirrors and day directories live. Must support hardlinks |
 | `EXTRA_REPOS` | empty | Comma-separated `owner/repo` to add |
@@ -50,3 +52,33 @@ GITHUB_TOKEN=$(gh auth token) DATA_DIR=./data uv run github-archive run
 ```
 
 `github-archive inventory` builds, checks and writes today's `inventory.json` without backing anything up. Either command with `--dry-run` prints the inventory and leaves `DATA_DIR` alone.
+
+## Container
+
+```
+podman build --platform linux/amd64 -t github-archive .
+```
+
+The image runs `github-archive run` as UID 1000. Mount a writable volume at `DATA_DIR` and an `emptyDir` at `/tmp` if the root filesystem is read-only. Run it as a daily CronJob with `concurrencyPolicy: Forbid` and `backoffLimit: 0`: a repo that fails is retried by the next day's run.
+
+## Cost
+
+Measured on the 27 `ietf-wg-dnsop` repos with `CONCURRENCY=4`:
+
+| | Time | GraphQL points | Points per repo |
+|---|---|---|---|
+| First run | 45 s | 540 | 20 |
+| Next run | 24 s | 243 | 9 |
+
+At about 1,800 repos, the first run needs around 36,000 points and later runs around 16,000. A token gets 5,000 points an hour, so the first run spends about seven hours waiting on the rate limit and later runs about three. archive-repo waits out the limit rather than failing. The inventory's REST requests come from a separate budget.
+
+## Known gaps
+
+- archive-repo is pinned to a commit on a personal fork, `sargeant/archive-repo` (branch `github-archive`), which carries six fixes: retries, rate-limit handling, a broken PR comments query, atomic output, reading the token from `GITHUB_TOKEN`, and upgrading legacy reference files. They need to go upstream as PRs, or the fork needs to move to `ietf-tools`.
+- No alerting. A run reports only through its exit code and the JSON logs (`repo_failed`, `inventory_missing`, `run_done`).
+- No CI and no published image yet.
+- Not yet run in full. Disk use for all repos, and how often `git gc --auto` repacks a mirror (which stops later day copies sharing objects with earlier ones), are still unknown.
+- Not backed up: wikis, Git LFS objects, release assets, and Discussions.
+- Repos are keyed by name. A rename starts a new mirror and a new issue history, and a reused name continues the old ones.
+- An owner link pulls in every public repo of that owner, with no cap on count or size.
+- archive-repo truncates labels and assignees at 100, and leaves out some review comment detail (author, path, line).
