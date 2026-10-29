@@ -57,6 +57,8 @@ GITHUB_TOKEN=$(gh auth token) DATA_DIR=./data uv run github-archive run
 
 ## Container
 
+The `Build image` workflow runs the tests on every push and pull request. On pushes to `main` and `v*` tags, it also publishes `ghcr.io/ietf-tools/github-archive` for `linux/amd64`, tagged `sha-<commit>`, `latest` on `main`, and the version on a tag. To build locally:
+
 ```
 podman build --platform linux/amd64 -t github-archive .
 ```
@@ -72,13 +74,12 @@ Measured on the 27 `ietf-wg-dnsop` repos with `CONCURRENCY=4`:
 | First run | 45 s | 540 | 20 |
 | Next run | 24 s | 243 | 9 |
 
-At about 700 repos, the first run needs around 14,000 points and later runs around 6,500. A token gets 5,000 points an hour, so the first run spends about three hours waiting on the rate limit and later runs about one. archive-repo waits out the limit rather than failing. The inventory's REST requests come from a separate budget.
+At about 800 repos, a first run from empty needs around 27,000 points and later runs around 7,200, since an unchanged repo still costs 9. A token gets 5,000 points an hour, so the first run takes about five and a half hours and a later run may wait once for the hourly reset. archive-repo waits out the limit rather than failing. The inventory's REST requests come from a separate budget.
 
 ## Known gaps
 
 - archive-repo is pinned to a commit on the fork `ietf-tools/archive-repo` (branch `github-archive`), which carries six fixes: retries, rate-limit handling, a broken PR comments query, atomic output, reading the token from `GITHUB_TOKEN`, and upgrading legacy reference files. Each fix is also on its own branch, ready to go upstream as a PR.
 - No alerting. A run reports only through its exit code and the JSON logs (`repo_failed`, `inventory_missing`, `run_done`).
-- No CI and no published image yet.
 - Not yet run in full. Disk use for all repos, and how often `git gc --auto` repacks a mirror (which stops later day copies sharing objects with earlier ones), are still unknown.
 - Not backed up: wikis, Git LFS objects, release assets, and Discussions.
 - Repos are keyed by name. A rename starts a new mirror and a new issue history, and a reused name continues the old ones.
