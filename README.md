@@ -4,7 +4,7 @@ Backs up the GitHub repositories that the IETF Datatracker links to. It is meant
 
 Each run:
 
-1. Builds the inventory from the Datatracker's `github_org` and `github_repo` resources for groups of the types in `GROUP_TYPES`, by default working groups only. A link to an owner pulls in all of that owner's public repos, forks included. The run aborts if the inventory is empty.
+1. Builds the inventory from the Datatracker's `github_org` and `github_repo` resources for groups of the types in `GROUP_TYPES`, by default working groups and research groups. A link to an owner pulls in all of that owner's public repos, forks included. The run aborts if the inventory is empty.
 2. Updates a persistent `git clone --mirror` of each repo, including `refs/pull/*`.
 3. Clones each mirror into the day's directory. A local clone hardlinks the object files, so a day's copy costs little more than its refs, and later fetches or a force-push on GitHub can't change it.
 4. Saves the repo's issues and pull requests, with their comments and reviews, as JSON using [archive-repo](https://github.com/MikeBishop/archive-repo). The newest earlier copy is passed as a reference, so only what changed since is fetched.
@@ -35,7 +35,7 @@ All configuration comes from environment variables.
 |---|---|---|
 | `GITHUB_TOKEN` | required | Token for the GitHub REST and GraphQL APIs; read access to public repos is enough. Git clones are anonymous |
 | `DATATRACKER_URL` | `https://datatracker.ietf.org` | Inventory source |
-| `GROUP_TYPES` | `wg` | Comma-separated Datatracker group types whose GitHub links are backed up, e.g. `wg,rg` |
+| `GROUP_TYPES` | `wg,rg` | Comma-separated Datatracker group types whose GitHub links are backed up |
 | `DATA_DIR` | `/data` | Where mirrors and day directories live. Must support hardlinks |
 | `EXTRA_REPOS` | empty | Comma-separated `owner/repo` to add |
 | `EXCLUDE_REPOS` | empty | Comma-separated `owner/repo` to leave out |

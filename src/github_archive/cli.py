@@ -45,7 +45,7 @@ def load_config(env):
 
     return Config(
         datatracker_url=env.get("DATATRACKER_URL", "https://datatracker.ietf.org").rstrip("/"),
-        group_types=lower("GROUP_TYPES") or ("wg",),
+        group_types=lower("GROUP_TYPES") or ("wg", "rg"),
         data_dir=Path(env.get("DATA_DIR", "/data")),
         extra_repos=names("EXTRA_REPOS"),
         exclude_repos=lower("EXCLUDE_REPOS"),
