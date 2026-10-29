@@ -72,7 +72,7 @@ class FakeGitHub:
 
 
 def inventory(monkeypatch, links, github, **env):
-    monkeypatch.setattr(inv, "datatracker_resources", lambda base_url: [("doc/docextresource", f"/r/{i}/", v) for i, v in enumerate(links)])
+    monkeypatch.setattr(inv, "datatracker_resources", lambda base_url: [("group/groupextresource", f"/r/{i}/", v) for i, v in enumerate(links)])
     return inv.build_inventory(load_config(env), github)[0]
 
 

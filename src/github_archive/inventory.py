@@ -8,7 +8,7 @@ from urllib.parse import quote, urljoin, urlsplit
 
 from .log import event
 
-SOURCES = ("group/groupextresource", "doc/docextresource")
+SOURCES = ("group/groupextresource",)
 RESOURCE_NAMES = ("github_org", "github_repo")
 GITHUB_HOSTS = ("github.com", "www.github.com")
 # Gone, or blocked for legal reasons. Anything else (rate limits included) aborts the inventory.
