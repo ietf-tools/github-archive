@@ -23,6 +23,7 @@ from .retention import apply_retention, latest_before
 @dataclass(frozen=True)
 class Config:
     datatracker_url: str
+    group_types: tuple
     data_dir: Path
     extra_repos: tuple
     exclude_repos: tuple
@@ -43,6 +44,7 @@ def load_config(env):
 
     return Config(
         datatracker_url=env.get("DATATRACKER_URL", "https://datatracker.ietf.org").rstrip("/"),
+        group_types=lower("GROUP_TYPES") or ("wg",),
         data_dir=Path(env.get("DATA_DIR", "/data")),
         extra_repos=names("EXTRA_REPOS"),
         exclude_repos=lower("EXCLUDE_REPOS"),

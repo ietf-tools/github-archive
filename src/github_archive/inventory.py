@@ -33,10 +33,10 @@ def get_json(url, headers=None):
     return fetch_json(request)
 
 
-def datatracker_resources(base_url):
+def datatracker_resources(base_url, group_types):
     for source in SOURCES:
         for name in RESOURCE_NAMES:
-            url = f"{base_url}/api/v1/{source}/?format=json&name={name}&limit=500"
+            url = f"{base_url}/api/v1/{source}/?format=json&name={name}&group__type__in={','.join(group_types)}&limit=500"
             while url:
                 page, _ = get_json(url)
                 for obj in page["objects"]:
@@ -96,7 +96,7 @@ def build_inventory(config, github):
     owners = {}
     repos = {}
     sources = Counter()
-    for source, uri, value in datatracker_resources(config.datatracker_url):
+    for source, uri, value in datatracker_resources(config.datatracker_url, config.group_types):
         sources[source] += 1
         parsed = parse_github_url(value)
         if parsed is None:
