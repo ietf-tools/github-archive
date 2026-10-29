@@ -25,4 +25,4 @@ venv = ".venv"
 typeCheckingMode = "standard"
 
 [tool.uv.sources]
-archive-repo = { git = "https://github.com/sargeant/archive-repo", rev = "13487ccaf41e8af24a6df734d3e98e6d9a66a3df" }
+archive-repo = { git = "https://github.com/sargeant/archive-repo", rev = "bc4feed72cdf775152d10f88714f7474d72883d6" }
