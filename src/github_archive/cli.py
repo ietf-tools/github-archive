@@ -27,6 +27,7 @@ class Config:
     data_dir: Path
     extra_repos: tuple
     exclude_repos: tuple
+    exclude_owners: tuple
     only_owners: tuple
     only_repos: tuple
     keep_daily: int
@@ -48,6 +49,7 @@ def load_config(env):
         data_dir=Path(env.get("DATA_DIR", "/data")),
         extra_repos=names("EXTRA_REPOS"),
         exclude_repos=lower("EXCLUDE_REPOS"),
+        exclude_owners=lower("EXCLUDE_OWNERS"),
         only_owners=lower("ONLY_OWNERS"),
         only_repos=lower("ONLY_REPOS"),
         keep_daily=int(env.get("KEEP_DAILY", "30")),

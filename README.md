@@ -39,6 +39,7 @@ All configuration comes from environment variables.
 | `DATA_DIR` | `/data` | Where mirrors and day directories live. Must support hardlinks |
 | `EXTRA_REPOS` | empty | Comma-separated `owner/repo` to add |
 | `EXCLUDE_REPOS` | empty | Comma-separated `owner/repo` to leave out |
+| `EXCLUDE_OWNERS` | empty | Comma-separated owners whose repos are all left out |
 | `ONLY_OWNERS`, `ONLY_REPOS` | empty | Restrict the run to these owners or repos |
 | `KEEP_DAILY` | `30` | Keep every day directory from the last this many days |
 | `KEEP_MONTHLY` | `12` | Also keep the first day directory of each of the last this many months that backed up at least one repo; `0` keeps every month |

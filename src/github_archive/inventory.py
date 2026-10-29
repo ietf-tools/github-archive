@@ -115,6 +115,7 @@ def build_inventory(config, github):
     if only:
         owners = {k: v for k, v in owners.items() if k in only}
         repos = {k: v for k, v in repos.items() if k.split("/")[0] in only}
+    owners = {k: v for k, v in owners.items() if k not in config.exclude_owners}
 
     found = {}
     for owner, source in sorted(owners.values()):
@@ -139,7 +140,7 @@ def build_inventory(config, github):
         found[repo["full_name"].lower()] = repo["full_name"]
 
     def wanted(key):
-        if key in config.exclude_repos:
+        if key in config.exclude_repos or key.split("/")[0] in config.exclude_owners:
             return False
         if config.only_owners or config.only_repos:
             return key.split("/")[0] in config.only_owners or key in config.only_repos

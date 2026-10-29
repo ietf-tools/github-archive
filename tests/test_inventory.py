@@ -53,9 +53,11 @@ class FakeGitHub:
         self.owners = owners
         self.renamed = renamed or {}
         self.gets = []
+        self.listed = []
 
     def pages(self, path):
         owner = path.split("/")[2].lower()
+        self.listed.append(owner)
         if owner not in self.owners:
             raise HTTPError(path, 404, "Not Found", Message(), None)
         yield [{"full_name": name} for name in self.owners[owner]]
@@ -129,6 +131,13 @@ def test_filters(monkeypatch):
         "ietf-wg-dnsop/draft-ietf-dnsop-3901bis",
     ]
     assert inventory(monkeypatch, [], github, EXTRA_REPOS="Flowdalic/xeps") == ["Flowdalic/xeps"]
+
+
+def test_exclude_owners_skips_listing_them(monkeypatch):
+    links = ["https://github.com/core-wg", "https://github.com/ietf-wg-dnsop/wg-materials", "https://github.com/flowdalic"]
+    github = FakeGitHub(GITHUB)
+    assert inventory(monkeypatch, links, github, EXCLUDE_OWNERS="Core-WG,ietf-wg-dnsop") == ["Flowdalic/xeps"]
+    assert github.listed == ["flowdalic"]
 
 
 def test_get_json_retries_server_errors(monkeypatch):
