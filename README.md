@@ -76,7 +76,7 @@ At about 700 repos, the first run needs around 14,000 points and later runs arou
 
 ## Known gaps
 
-- archive-repo is pinned to a commit on a personal fork, `sargeant/archive-repo` (branch `github-archive`), which carries six fixes: retries, rate-limit handling, a broken PR comments query, atomic output, reading the token from `GITHUB_TOKEN`, and upgrading legacy reference files. They need to go upstream as PRs, or the fork needs to move to `ietf-tools`.
+- archive-repo is pinned to a commit on the fork `ietf-tools/archive-repo` (branch `github-archive`), which carries six fixes: retries, rate-limit handling, a broken PR comments query, atomic output, reading the token from `GITHUB_TOKEN`, and upgrading legacy reference files. Each fix is also on its own branch, ready to go upstream as a PR.
 - No alerting. A run reports only through its exit code and the JSON logs (`repo_failed`, `inventory_missing`, `run_done`).
 - No CI and no published image yet.
 - Not yet run in full. Disk use for all repos, and how often `git gc --auto` repacks a mirror (which stops later day copies sharing objects with earlier ones), are still unknown.

@@ -25,4 +25,4 @@ venv = ".venv"
 typeCheckingMode = "standard"
 
 [tool.uv.sources]
-archive-repo = { git = "https://github.com/sargeant/archive-repo", rev = "bc4feed72cdf775152d10f88714f7474d72883d6" }
+archive-repo = { git = "https://github.com/ietf-tools/archive-repo", rev = "bc4feed72cdf775152d10f88714f7474d72883d6" }
